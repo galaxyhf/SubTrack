@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{subject}}</title>
+  </head>
+  <body style="margin: 0; background-color: #f4f7fb; padding: 0; font-family: Arial, Helvetica, sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f7fb;">
+      <tr>
+        <td align="center" style="padding: 32px 16px;">
+          <table
+            role="presentation"
+            width="100%"
+            cellspacing="0"
+            cellpadding="0"
+            style="max-width: 560px; overflow: hidden; border-radius: 14px; background-color: #ffffff; border: 1px solid #e5eaf1;"
+          >
+            <tr>
+              <td style="padding: 28px 32px 16px;">
+                <div style="font-size: 14px; font-weight: 700; color: #2563eb; letter-spacing: 0.2px;">SubTrack</div>
+                <h1 style="margin: 18px 0 0; color: #111827; font-size: 26px; line-height: 1.25; font-weight: 700;">
+                  {{heading}}
+                </h1>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 0 32px 8px;">
+                <p style="margin: 0; color: #4b5563; font-size: 16px; line-height: 1.6;">Ola, {{to_name}}.</p>
+                <p style="margin: 16px 0 0; color: #111827; font-size: 16px; line-height: 1.6;">{{message}}</p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 18px 32px 8px;">
+                <table
+                  role="presentation"
+                  width="100%"
+                  cellspacing="0"
+                  cellpadding="0"
+                  style="border-radius: 10px; background-color: #f8fafc; border: 1px solid #e5eaf1;"
+                >
+                  <tr>
+                    <td style="padding: 18px;">
+                      <p style="margin: 0 0 8px; color: #6b7280; font-size: 13px; line-height: 1.4;">Assinatura</p>
+                      <p style="margin: 0; color: #111827; font-size: 16px; line-height: 1.5; font-weight: 700;">
+                        {{subscription}}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 0 18px 18px;">
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+                        <tr>
+                          <td style="width: 50%; padding-right: 8px;">
+                            <p style="margin: 0 0 6px; color: #6b7280; font-size: 13px; line-height: 1.4;">Valor</p>
+                            <p style="margin: 0; color: #111827; font-size: 15px; line-height: 1.5; font-weight: 600;">
+                              {{amount}}
+                            </p>
+                          </td>
+                          <td style="width: 50%; padding-left: 8px;">
+                            <p style="margin: 0 0 6px; color: #6b7280; font-size: 13px; line-height: 1.4;">Data</p>
+                            <p style="margin: 0; color: #111827; font-size: 15px; line-height: 1.5; font-weight: 600;">
+                              {{date}}
+                            </p>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding: 24px 32px 30px;">
+                <a
+                  href="{{action_url}}"
+                  style="display: inline-block; border-radius: 8px; background-color: #2563eb; padding: 13px 18px; color: #ffffff; font-size: 15px; font-weight: 700; text-decoration: none;"
+                >
+                  {{action_label}}
+                </a>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="border-top: 1px solid #e5eaf1; padding: 18px 32px 24px;">
+                <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.5;">
+                  Este email foi enviado automaticamente pelo SubTrack. Se voce nao reconhece esta acao, ignore esta
+                  mensagem.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
