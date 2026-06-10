@@ -10,22 +10,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { NotificationPreferencesInput } from "@/schemas/subscription";
 
 interface SettingsClientProps {
   name?: string | null;
   email?: string | null;
+  preferences: NotificationPreferencesInput;
 }
 
-export const SettingsClient = ({ name, email }: SettingsClientProps) => {
+const notificationOptions = [
+  ["notify7Days", "Receber lembrete 7 dias antes"],
+  ["notify3Days", "Receber lembrete 3 dias antes"],
+  ["notify1Day", "Receber lembrete 1 dia antes"],
+  ["notifyDueDay", "Receber lembrete no vencimento"],
+] as const;
+
+export const SettingsClient = ({ name, email, preferences: initialPreferences }: SettingsClientProps) => {
   const [profile, setProfile] = useState({ name: name ?? "", email: email ?? "" });
   const [password, setPassword] = useState({ password: "", confirmPassword: "" });
-  const [preferences, setPreferences] = useState({
-    notify7Days: true,
-    notify3Days: true,
-    notify1Day: true,
-    notifyDueDay: true,
-    notifyOverdue: true,
-  });
+  const [preferences, setPreferences] = useState(initialPreferences);
   const [pending, startTransition] = useTransition();
 
   const run = (action: () => Promise<{ ok: boolean; message: string }>) => {
@@ -98,17 +101,11 @@ export const SettingsClient = ({ name, email }: SettingsClientProps) => {
             <CardTitle>Emails de lembrete</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {[
-              ["notify7Days", "Receber lembrete 7 dias antes"],
-              ["notify3Days", "Receber lembrete 3 dias antes"],
-              ["notify1Day", "Receber lembrete 1 dia antes"],
-              ["notifyDueDay", "Receber lembrete no vencimento"],
-              ["notifyOverdue", "Receber alerta de atraso"],
-            ].map(([key, label]) => (
+            {notificationOptions.map(([key, label]) => (
               <div key={key} className="flex items-center justify-between rounded-md border border-border bg-secondary/40 p-3">
                 <Label>{label}</Label>
                 <Switch
-                  checked={preferences[key as keyof typeof preferences]}
+                  checked={preferences[key]}
                   onCheckedChange={(checked) => setPreferences((current) => ({ ...current, [key]: checked }))}
                 />
               </div>

@@ -19,7 +19,6 @@ const getReminderType = (daysUntilDue: number): EmailReminderType | null => {
   if (daysUntilDue === 3) return "reminder_3_days";
   if (daysUntilDue === 1) return "reminder_1_day";
   if (daysUntilDue === 0) return "due_today";
-  if (daysUntilDue < 0) return "overdue";
   return null;
 };
 
@@ -46,7 +45,6 @@ export const GET = async (request: Request) => {
       notify3Days: notificationPreferences.notify3Days,
       notify1Day: notificationPreferences.notify1Day,
       notifyDueDay: notificationPreferences.notifyDueDay,
-      notifyOverdue: notificationPreferences.notifyOverdue,
     })
     .from(subscriptions)
     .innerJoin(users, eq(users.id, subscriptions.userId))
@@ -72,7 +70,7 @@ export const GET = async (request: Request) => {
       reminder_3_days: row.notify3Days,
       reminder_1_day: row.notify1Day,
       due_today: row.notifyDueDay,
-      overdue: row.notifyOverdue,
+      overdue: false,
     };
 
     if (!enabledByType[type]) {

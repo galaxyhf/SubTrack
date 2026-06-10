@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
@@ -12,6 +13,8 @@ import {
   Lightbulb,
   LogOut,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   ReceiptText,
   Settings,
   Tags,
@@ -31,20 +34,29 @@ const navItems = [
   { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
-const SidebarContent = () => {
+interface SidebarContentProps {
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
+}
+
+const SidebarContent = ({ collapsed = false, onToggleCollapsed }: SidebarContentProps) => {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full flex-col">
-      <Link href="/dashboard" className="flex h-16 items-center gap-3 border-b border-border px-5">
-        <div className="flex size-9 items-center justify-center rounded-md bg-primary">
-          <ReceiptText className="size-5 text-primary-foreground" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold leading-none">SubTrack</p>
-          <p className="mt-1 text-xs text-muted-foreground">Recurring OS</p>
-        </div>
-      </Link>
+      <div className={cn("flex h-16 items-center border-b border-border px-3", collapsed ? "justify-center" : "gap-3")}>
+        <Link href="/dashboard" className={cn("flex min-w-0 items-center gap-3", collapsed && "justify-center")}>
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary">
+            <ReceiptText className="size-5 text-primary-foreground" />
+          </div>
+          {!collapsed ? (
+            <div className="min-w-0">
+              <p className="text-sm font-semibold leading-none">SubTrack</p>
+              <p className="mt-1 text-xs text-muted-foreground">Recurring OS</p>
+            </div>
+          ) : null}
+        </Link>
+      </div>
       <nav className="flex-1 space-y-1 p-3">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -56,21 +68,43 @@ const SidebarContent = () => {
               href={item.href}
               className={cn(
                 "flex h-10 items-center gap-3 rounded-md px-3 text-sm text-muted-foreground transition hover:bg-sidebar-accent hover:text-foreground",
+                collapsed && "justify-center px-0",
                 active && "bg-sidebar-accent text-foreground",
               )}
+              title={collapsed ? item.label : undefined}
             >
               <Icon className="size-4" />
-              {item.label}
+              {!collapsed ? item.label : null}
             </Link>
           );
         })}
       </nav>
-      <form action={logoutAction} className="border-t border-border p-3">
-        <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground" type="submit">
-          <LogOut className="size-4" />
-          Sair
-        </Button>
-      </form>
+      <div className="space-y-2 border-t border-border p-3">
+        <form action={logoutAction}>
+          <Button
+            variant="ghost"
+            className={cn("w-full gap-3 text-muted-foreground", collapsed ? "justify-center px-0" : "justify-start")}
+            type="submit"
+            title={collapsed ? "Sair" : undefined}
+          >
+            <LogOut className="size-4" />
+            {!collapsed ? "Sair" : null}
+          </Button>
+        </form>
+        {onToggleCollapsed ? (
+          <Button
+            variant="outline"
+            className={cn("hidden w-full gap-3 lg:inline-flex", collapsed ? "justify-center px-0" : "justify-start")}
+            type="button"
+            aria-label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"}
+            title={collapsed ? "Expandir barra lateral" : undefined}
+            onClick={onToggleCollapsed}
+          >
+            {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
+            {!collapsed ? "Recolher" : null}
+          </Button>
+        ) : null}
+      </div>
     </div>
   );
 };
@@ -81,12 +115,19 @@ interface AppShellProps {
 }
 
 export const AppShell = ({ children, userName }: AppShellProps) => {
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
   return (
     <div className="min-h-screen bg-background">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 border-r border-border bg-sidebar lg:block">
-        <SidebarContent />
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-30 hidden border-r border-border bg-sidebar transition-[width] duration-200 lg:block",
+          sidebarCollapsed ? "w-16" : "w-64",
+        )}
+      >
+        <SidebarContent collapsed={sidebarCollapsed} onToggleCollapsed={() => setSidebarCollapsed((value) => !value)} />
       </aside>
-      <div className="lg:pl-64">
+      <div className={cn("transition-[padding] duration-200", sidebarCollapsed ? "lg:pl-16" : "lg:pl-64")}>
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-border bg-background/85 px-4 backdrop-blur md:px-6">
           <div className="flex items-center gap-3">
             <Sheet>

@@ -9,14 +9,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
-import { formatCurrency } from "@/lib/formatters";
-import { calculateCategorySummaries } from "@/services/subscriptions";
-import type { CategorySummary, SubscriptionView } from "@/types";
+import { billingCycleLabels, formatCurrency } from "@/lib/formatters";
+import type { BillingCycle, CategorySummary, SubscriptionView } from "@/types";
 
 interface ReportsClientProps {
   categories: CategorySummary[];
   subscriptions: SubscriptionView[];
 }
+
+const reportHeaders = ["Nome", "Categoria", "Valor", "Frequência", "Status"];
+const cycleMonths: Record<BillingCycle, number> = {
+  monthly: 1,
+  quarterly: 3,
+  semiannual: 6,
+  yearly: 12,
+};
+
+const escapeCsvValue = (value: string | number) => {
+  const text = String(value);
+
+  if (/[",\n\r]/.test(text)) {
+    return `"${text.replaceAll("\"", "\"\"")}"`;
+  }
+
+  return text;
+};
+
+const getMonthIndex = (year: number, month: number) => year * 12 + month - 1;
+
+const hasChargeInMonth = (subscription: SubscriptionView, year: string, month: string) => {
+  if (subscription.status !== "active") return false;
+
+  const [nextPaymentYear, nextPaymentMonth] = subscription.nextPaymentDate.split("-").map(Number);
+  const selectedMonthIndex = getMonthIndex(Number(year), Number(month));
+  const nextPaymentMonthIndex = getMonthIndex(nextPaymentYear, nextPaymentMonth);
+  const monthDifference = selectedMonthIndex - nextPaymentMonthIndex;
+
+  return monthDifference >= 0 && monthDifference % cycleMonths[subscription.billingCycle] === 0;
+};
 
 export const ReportsClient = ({ categories, subscriptions }: ReportsClientProps) => {
   const currentDate = new Date();
@@ -26,25 +56,34 @@ export const ReportsClient = ({ categories, subscriptions }: ReportsClientProps)
   const filtered = useMemo(
     () =>
       subscriptions
-        .filter((subscription) => subscription.nextPaymentDate.startsWith(`${year}-${month}`))
+        .filter((subscription) => hasChargeInMonth(subscription, year, month))
         .filter((subscription) => (category === "all" ? true : subscription.categoryId === category)),
     [category, month, subscriptions, year],
   );
   const total = filtered.reduce((sum, item) => sum + item.price, 0);
+  const average = filtered.length > 0 ? total / filtered.length : 0;
   const mostExpensiveSubscription = [...filtered].sort((first, second) => second.price - first.price)[0];
-  const categorySummaries = calculateCategorySummaries(categories, filtered);
+  const categorySummaries = categories.map((item) => ({
+    ...item,
+    total: filtered
+      .filter((subscription) => subscription.categoryId === item.id)
+      .reduce((sum, subscription) => sum + subscription.price, 0),
+  }));
   const mostExpensiveCategory = [...categorySummaries].sort((first, second) => second.total - first.total)[0];
 
   const rows = filtered.map((item) => ({
     Nome: item.name,
     Categoria: item.category,
     Valor: item.price,
-    Frequencia: item.billingCycle,
-    Status: item.status,
+    Frequencia: billingCycleLabels[item.billingCycle],
+    Status: item.status === "active" ? "Ativa" : "Cancelada",
   }));
 
   const exportCsv = () => {
-    const csv = [Object.keys(rows[0] ?? {}).join(","), ...rows.map((row) => Object.values(row).join(","))].join("\n");
+    const csv = [
+      reportHeaders.map(escapeCsvValue).join(","),
+      ...rows.map((row) => [row.Nome, row.Categoria, row.Valor, row.Frequencia, row.Status].map(escapeCsvValue).join(",")),
+    ].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -65,7 +104,7 @@ export const ReportsClient = ({ categories, subscriptions }: ReportsClientProps)
     const doc = new jsPDF();
     doc.text("Relatório SubTrack", 14, 16);
     autoTable(doc, {
-      head: [["Nome", "Categoria", "Valor", "Frequência", "Status"]],
+      head: [reportHeaders],
       body: rows.map((row) => [row.Nome, row.Categoria, formatCurrency(row.Valor), row.Frequencia, row.Status]),
       startY: 24,
     });
@@ -92,7 +131,12 @@ export const ReportsClient = ({ categories, subscriptions }: ReportsClientProps)
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {[String(currentDate.getFullYear()), String(currentDate.getFullYear() - 1), String(currentDate.getFullYear() - 2)].map((item) => (
+            {[
+              String(currentDate.getFullYear() + 1),
+              String(currentDate.getFullYear()),
+              String(currentDate.getFullYear() - 1),
+              String(currentDate.getFullYear() - 2),
+            ].map((item) => (
               <SelectItem key={item} value={item}>
                 {item}
               </SelectItem>
@@ -136,9 +180,9 @@ export const ReportsClient = ({ categories, subscriptions }: ReportsClientProps)
         </Card>
         <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-sm">Média mensal</CardTitle>
+            <CardTitle className="text-sm">Média por assinatura</CardTitle>
           </CardHeader>
-          <CardContent className="text-2xl font-semibold">{formatCurrency(total)}</CardContent>
+          <CardContent className="text-2xl font-semibold">{formatCurrency(average)}</CardContent>
         </Card>
         <Card className="border-border bg-card">
           <CardHeader>

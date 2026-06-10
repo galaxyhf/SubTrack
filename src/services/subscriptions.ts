@@ -1,7 +1,8 @@
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { categories, subscriptions } from "@/db/schema";
+import { categories, notificationPreferences, subscriptions } from "@/db/schema";
 import { getMonthlyValue } from "@/lib/formatters";
+import type { NotificationPreferencesInput } from "@/schemas/subscription";
 import type { CategorySummary, DashboardMetrics, SubscriptionView } from "@/types";
 
 const formatDateKey = (date: Date) => {
@@ -24,6 +25,26 @@ export const getUserCategories = async (userId: string): Promise<CategorySummary
     .orderBy(asc(categories.name));
 
   return rows.map((category) => ({ ...category, total: 0 }));
+};
+
+export const getUserNotificationPreferences = async (userId: string): Promise<NotificationPreferencesInput> => {
+  const rows = await getDb()
+    .select({
+      notify7Days: notificationPreferences.notify7Days,
+      notify3Days: notificationPreferences.notify3Days,
+      notify1Day: notificationPreferences.notify1Day,
+      notifyDueDay: notificationPreferences.notifyDueDay,
+    })
+    .from(notificationPreferences)
+    .where(eq(notificationPreferences.userId, userId))
+    .limit(1);
+
+  return rows[0] ?? {
+    notify7Days: true,
+    notify3Days: true,
+    notify1Day: true,
+    notifyDueDay: true,
+  };
 };
 
 export const getUserSubscriptions = async (userId: string): Promise<SubscriptionView[]> => {

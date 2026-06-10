@@ -22,7 +22,6 @@ export const notificationPreferencesSchema = z.object({
   notify3Days: z.boolean(),
   notify1Day: z.boolean(),
   notifyDueDay: z.boolean(),
-  notifyOverdue: z.boolean(),
 });
 
 export type SubscriptionInput = z.infer<typeof subscriptionSchema>;

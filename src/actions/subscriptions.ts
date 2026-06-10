@@ -147,9 +147,12 @@ export const updateNotificationPreferencesAction = async (input: unknown): Promi
   }
 
   await getDb()
-    .update(notificationPreferences)
-    .set({ ...parsed.data, updatedAt: new Date() })
-    .where(eq(notificationPreferences.userId, user.id));
+    .insert(notificationPreferences)
+    .values({ userId: user.id, ...parsed.data, notifyOverdue: false, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: notificationPreferences.userId,
+      set: { ...parsed.data, notifyOverdue: false, updatedAt: new Date() },
+    });
   revalidatePath("/settings");
   return { ok: true, message: "Preferências atualizadas." };
 };
