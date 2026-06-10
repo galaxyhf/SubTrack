@@ -3,7 +3,14 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/db";
 import { emailLogs, notificationPreferences, subscriptions, users } from "@/db/schema";
 import { sendReminderEmail } from "@/services/email";
-import type { EmailReminderType } from "@/types";
+import type { BillingCycle, EmailReminderType } from "@/types";
+
+const cycleMonths: Record<BillingCycle, number> = {
+  monthly: 1,
+  quarterly: 3,
+  semiannual: 6,
+  yearly: 12,
+};
 
 const getDayBounds = (date: Date) => {
   const start = new Date(date);
@@ -22,6 +29,16 @@ const getReminderType = (daysUntilDue: number): EmailReminderType | null => {
   return null;
 };
 
+const getNextOccurrenceDate = (startDate: Date, billingCycle: BillingCycle, today: Date) => {
+  const nextOccurrence = getDayBounds(startDate).start;
+
+  while (nextOccurrence < today) {
+    nextOccurrence.setMonth(nextOccurrence.getMonth() + cycleMonths[billingCycle]);
+  }
+
+  return nextOccurrence;
+};
+
 export const GET = async (request: Request) => {
   const authHeader = request.headers.get("authorization");
 
@@ -37,6 +54,7 @@ export const GET = async (request: Request) => {
       subscriptionId: subscriptions.id,
       subscriptionName: subscriptions.name,
       nextPaymentDate: subscriptions.nextPaymentDate,
+      billingCycle: subscriptions.billingCycle,
       price: subscriptions.price,
       userId: users.id,
       userName: users.name,
@@ -48,15 +66,14 @@ export const GET = async (request: Request) => {
     })
     .from(subscriptions)
     .innerJoin(users, eq(users.id, subscriptions.userId))
-    .innerJoin(notificationPreferences, eq(notificationPreferences.userId, users.id))
+    .leftJoin(notificationPreferences, eq(notificationPreferences.userId, users.id))
     .where(eq(subscriptions.status, "active"));
 
   let sent = 0;
   let skipped = 0;
 
   for (const row of rows) {
-    const dueDate = new Date(row.nextPaymentDate);
-    const dueStart = getDayBounds(dueDate).start;
+    const dueStart = getNextOccurrenceDate(row.nextPaymentDate, row.billingCycle, start);
     const daysUntilDue = Math.round((dueStart.getTime() - start.getTime()) / 86_400_000);
     const type = getReminderType(daysUntilDue);
 
@@ -66,10 +83,10 @@ export const GET = async (request: Request) => {
     }
 
     const enabledByType: Record<EmailReminderType, boolean> = {
-      reminder_7_days: row.notify7Days,
-      reminder_3_days: row.notify3Days,
-      reminder_1_day: row.notify1Day,
-      due_today: row.notifyDueDay,
+      reminder_7_days: row.notify7Days ?? true,
+      reminder_3_days: row.notify3Days ?? true,
+      reminder_1_day: row.notify1Day ?? true,
+      due_today: row.notifyDueDay ?? true,
       overdue: false,
     };
 
@@ -102,7 +119,7 @@ export const GET = async (request: Request) => {
       name: row.userName,
       subscription: row.subscriptionName,
       amount: Number(row.price),
-      date: row.nextPaymentDate,
+      date: dueStart,
       type,
     });
 
