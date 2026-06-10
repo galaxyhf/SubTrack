@@ -19,24 +19,6 @@ SaaS moderno para gerenciamento de assinaturas recorrentes, gastos fixos, vencim
 - EmailJS
 - Vercel Cron
 
-## Variáveis de ambiente
-
-Crie `.env.local` a partir de `.env.example`:
-
-```env
-DATABASE_URL=
-AUTH_SECRET=
-AUTH_URL=http://localhost:3000
-EMAILJS_SERVICE_ID=
-EMAILJS_TEMPLATE_ID=
-EMAILJS_RESET_TEMPLATE_ID=
-EMAILJS_PUBLIC_KEY=
-EMAILJS_PRIVATE_KEY=
-CRON_SECRET=
-```
-
-Em produção, defina todas as variáveis na Vercel. O `AUTH_SECRET` deve ser forte e único.
-
 ## Configurar envio de emails
 
 O projeto envia emails com EmailJS. O mesmo serviço é usado em:
