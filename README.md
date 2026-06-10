@@ -53,6 +53,8 @@ Para testar manualmente:
 
 ## Rodar localmente
 
+Crie um arquivo `.env` na raiz do projeto com as variáveis de ambiente do `.env.example`.
+
 ```bash
 npm install
 npm run dev
