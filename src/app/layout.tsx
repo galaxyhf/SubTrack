@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "@/providers/providers";
+import { getAppUrl } from "@/lib/app-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
     template: "%s | SubTrack",
   },
   description: "Gerencie assinaturas recorrentes, gastos fixos e vencimentos em um painel SaaS moderno.",
-  metadataBase: new URL(process.env.AUTH_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(getAppUrl()),
 };
 
 export default function RootLayout({

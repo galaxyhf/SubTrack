@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate } from "@/lib/formatters";
+import { getAppUrl } from "@/lib/app-url";
 import type { EmailReminderType } from "@/types";
 
 const emailJsUrl = "https://api.emailjs.com/api/v1.0/email/send";
@@ -101,7 +102,7 @@ const sendEmail = async (
 };
 
 export const sendReminderEmail = async (input: ReminderEmailInput): Promise<EmailJsResult> => {
-  const appUrl = process.env.AUTH_URL ?? "http://localhost:3000";
+  const appUrl = getAppUrl();
   const templateType: ReminderTemplateType =
     input.type === "due_today" ? "today" : input.type === "overdue" ? "overdue" : "reminder";
   const daysByType: Partial<Record<EmailReminderType, number>> = {
@@ -141,7 +142,7 @@ export const sendPasswordResetEmail = async ({
   name: string;
   token: string;
 }): Promise<EmailJsResult> => {
-  const appUrl = process.env.AUTH_URL ?? "http://localhost:3000";
+  const appUrl = getAppUrl();
   const config = getEmailJsConfig();
 
   return sendEmail(
