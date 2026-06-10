@@ -30,75 +30,18 @@ A API REST do EmailJS tem limite de 1 envio por segundo. O serviço respeita ess
 
 Para configurar:
 
-1. Crie uma conta em `https://www.emailjs.com`.
-2. Adicione um serviço de email em `Email Services`.
-3. Crie dois templates em `Email Templates`: um para lembretes e outro para redefinição de senha.
-4. Copie o `Service ID`, os dois `Template ID`, o `Public Key` e, se estiver usando a REST API com chave privada, o `Private Key`.
-5. Preencha o `.env.local`:
-
-```env
-EMAILJS_SERVICE_ID=service_xxxxxxxxx
-EMAILJS_TEMPLATE_ID=template_xxxxxxxxx
-EMAILJS_RESET_TEMPLATE_ID=template_xxxxxxxxx
-EMAILJS_PUBLIC_KEY=xxxxxxxxxxxxxxxxx
-EMAILJS_PRIVATE_KEY=xxxxxxxxxxxxxxxxx
-AUTH_URL=http://localhost:3000
-```
-
-Para produção, use a URL real do app:
-
-```env
-AUTH_URL=https://seu-dominio.com
-```
-
-No EmailJS, configure o destinatário dos templates usando a variável:
-
-```txt
-{{to_email}}
-```
+1. Crie uma conta no EmailJS.
+2. Adicione um serviço de email.
+3. Crie os templates necessários para lembretes e redefinição de senha.
+4. Configure as variáveis de ambiente exigidas pelo projeto diretamente na plataforma utilizada para desenvolvimento e deploy.
 
 ### Template de lembretes
 
-Use o arquivo `emailjs-template.html` como corpo HTML do template de lembretes. No campo de assunto, use:
-
-```txt
-{{subject}}
-```
-
-Variáveis enviadas para esse template:
-
-```txt
-{{to_email}}
-{{to_name}}
-{{subject}}
-{{preview}}
-{{heading}}
-{{message}}
-{{subscription}}
-{{amount}}
-{{date}}
-{{action_url}}
-{{action_label}}
-```
+Use o arquivo `emailjs-template.html` como corpo HTML do template de lembretes.
 
 ### Template de redefinição de senha
 
-Use o arquivo `emailjs-reset-password-template.html` como corpo HTML do template de redefinição de senha. No campo de assunto, use:
-
-```txt
-{{subject}}
-```
-
-Variáveis enviadas para esse template:
-
-```txt
-{{to_email}}
-{{to_name}}
-{{subject}}
-{{preview}}
-{{reset_url}}
-{{expires_in}}
-```
+Use o arquivo `emailjs-reset-password-template.html` como corpo HTML do template de redefinição de senha.
 
 Para testar manualmente:
 
@@ -107,15 +50,6 @@ Para testar manualmente:
 3. Acesse `/forgot-password`.
 4. Solicite a recuperação de senha.
 5. Confira se o email chegou e se o link abre `/reset-password`.
-
-Se não chegar, verifique:
-
-- `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_RESET_TEMPLATE_ID` e `EMAILJS_PUBLIC_KEY` estão preenchidas;
-- `EMAILJS_PRIVATE_KEY` está correta se o template/serviço exigir chave privada;
-- `AUTH_URL` aponta para a URL correta;
-- o template usa `{{to_email}}` como destinatário;
-- o painel do EmailJS mostra erro no envio;
-- spam/lixo eletrônico.
 
 ## Rodar localmente
 
@@ -151,36 +85,6 @@ O cron está em `vercel.json` e chama diariamente:
 
 Agenda configurada: `0 11 * * *`, equivalente a 08:00 no horário de Brasília quando a Vercel executa em UTC.
 
-Para proteger a rota do cron, configure:
-
-```env
-CRON_SECRET=uma_chave_forte
-```
-
-Ao chamar manualmente a rota, envie o header:
-
-```txt
-Authorization: Bearer uma_chave_forte
-```
-
-Exemplo local:
-
-```bash
-curl -H "Authorization: Bearer uma_chave_forte" http://localhost:3000/api/cron/subscription-reminders
-```
-
-O retorno esperado é um JSON como:
-
-```json
-{
-  "ok": true,
-  "sent": 0,
-  "skipped": 0
-}
-```
-
-`sent` indica emails enviados. `skipped` indica assinaturas ignoradas por regra de data, preferência do usuário, email já enviado no dia ou erro retornado pelo EmailJS.
-
 ## Validação
 
 ```bash
@@ -191,6 +95,6 @@ npm run build
 ## Deploy
 
 1. Conecte o repositório na Vercel.
-2. Configure `DATABASE_URL`, `AUTH_SECRET`, `AUTH_URL`, `EMAILJS_SERVICE_ID`, `EMAILJS_TEMPLATE_ID`, `EMAILJS_RESET_TEMPLATE_ID`, `EMAILJS_PUBLIC_KEY`, `EMAILJS_PRIVATE_KEY` e `CRON_SECRET`.
-3. Rode as migrations no banco Neon.
+2. Configure as variáveis de ambiente necessárias ao projeto.
+3. Rode as migrations no banco.
 4. Faça o deploy.
