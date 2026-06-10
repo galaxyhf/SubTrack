@@ -97,6 +97,6 @@ npm run build
 ## Deploy
 
 1. Conecte o repositório na Vercel.
-2. Configure as variáveis de ambiente necessárias ao projeto.
+2. Configure `DOTENV_PRIVATE_KEY` na Vercel para descriptografar o `.env` em build e runtime.
 3. Rode as migrations no banco.
 4. Faça o deploy.

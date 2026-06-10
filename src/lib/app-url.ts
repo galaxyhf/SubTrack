@@ -7,7 +7,9 @@ const normalizeUrl = (url: string) => url.replace(/\/$/, "");
 const hasUsableValue = (value: string | undefined): value is string => {
   if (!value) return false;
 
-  return !["null", "undefined"].includes(value.trim().toLowerCase());
+  const normalized = value.trim().toLowerCase();
+
+  return !["null", "undefined"].includes(normalized) && !normalized.startsWith("encrypted:");
 };
 
 export const getAppUrl = () => {
