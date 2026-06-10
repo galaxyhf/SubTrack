@@ -6,14 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, getMonthlyValue } from "@/lib/formatters";
-import { calculateDemoMetrics, demoCategories, demoSubscriptions } from "@/services/mock-data";
+import { calculateCategorySummaries, calculateSubscriptionMetrics } from "@/services/subscriptions";
+import type { CategorySummary, SubscriptionView } from "@/types";
 
-export const InsightsClient = () => {
-  const metrics = calculateDemoMetrics();
+interface InsightsClientProps {
+  categories: CategorySummary[];
+  subscriptions: SubscriptionView[];
+}
+
+export const InsightsClient = ({ categories, subscriptions }: InsightsClientProps) => {
+  const categorySummaries = calculateCategorySummaries(categories, subscriptions);
+  const metrics = calculateSubscriptionMetrics(subscriptions);
   const [selected, setSelected] = useState<string[]>([]);
-  const mostExpensiveCategory = [...demoCategories].sort((first, second) => second.total - first.total)[0];
-  const mostExpensiveSubscription = [...demoSubscriptions].sort((first, second) => second.price - first.price)[0];
-  const selectedSubscriptions = demoSubscriptions.filter((subscription) => selected.includes(subscription.id));
+  const mostExpensiveCategory = [...categorySummaries].sort((first, second) => second.total - first.total)[0];
+  const mostExpensiveSubscription = [...subscriptions].sort((first, second) => second.price - first.price)[0];
+  const selectedSubscriptions = subscriptions.filter((subscription) => selected.includes(subscription.id));
   const monthlySavings = useMemo(
     () => selectedSubscriptions.reduce((sum, item) => sum + getMonthlyValue(item.price, item.billingCycle), 0),
     [selectedSubscriptions],
@@ -34,8 +41,10 @@ export const InsightsClient = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold">{mostExpensiveCategory.name}</p>
-            <p className="mt-1 text-sm text-muted-foreground">{formatCurrency(mostExpensiveCategory.total)} por mês</p>
+            <p className="text-2xl font-semibold">{mostExpensiveCategory?.total ? mostExpensiveCategory.name : "-"}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {mostExpensiveCategory?.total ? `${formatCurrency(mostExpensiveCategory.total)} por mês` : "Nenhum gasto cadastrado."}
+            </p>
           </CardContent>
         </Card>
         <Card className="border-border bg-card">
@@ -58,8 +67,8 @@ export const InsightsClient = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#F59E0B]">+3,8%</p>
-            <p className="mt-1 text-sm text-muted-foreground">Aumento moderado nos últimos 3 meses.</p>
+            <p className="text-2xl font-semibold">-</p>
+            <p className="mt-1 text-sm text-muted-foreground">Sem histórico suficiente para calcular tendência.</p>
           </CardContent>
         </Card>
       </div>
@@ -69,7 +78,8 @@ export const InsightsClient = () => {
             <CardTitle className="text-base">Simulador de economia</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {demoSubscriptions.map((subscription) => (
+            {subscriptions.length === 0 ? <p className="text-sm text-muted-foreground">Nenhuma assinatura cadastrada.</p> : null}
+            {subscriptions.map((subscription) => (
               <label key={subscription.id} className="flex items-center justify-between rounded-md border border-border bg-secondary/40 p-3">
                 <span className="flex items-center gap-3">
                   <Checkbox checked={selected.includes(subscription.id)} onCheckedChange={() => toggle(subscription.id)} />
@@ -100,9 +110,11 @@ export const InsightsClient = () => {
               <p className="text-sm text-muted-foreground">Economia em 5 anos</p>
               <p className="text-2xl font-semibold">{formatCurrency(monthlySavings * 60)}</p>
             </div>
-            <Badge variant="outline" className="border-primary text-primary">
-              Recomendação: revise {mostExpensiveSubscription.name}
-            </Badge>
+            {mostExpensiveSubscription ? (
+              <Badge variant="outline" className="border-primary text-primary">
+                Recomendação: revise {mostExpensiveSubscription.name}
+              </Badge>
+            ) : null}
           </CardContent>
         </Card>
       </div>

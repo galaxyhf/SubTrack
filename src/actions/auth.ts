@@ -87,7 +87,18 @@ export const forgotPasswordAction = async (input: unknown): Promise<ActionState>
     .returning({ name: users.name, email: users.email });
 
   if (user) {
-    await sendPasswordResetEmail({ to: user.email, name: user.name, token });
+    const emailResult = await sendPasswordResetEmail({ to: user.email, name: user.name, token });
+
+    if (emailResult.error) {
+      console.error("Failed to send password reset email", emailResult.error);
+
+      await getDb()
+        .update(users)
+        .set({ resetToken: null, resetTokenExpiresAt: null })
+        .where(eq(users.email, user.email));
+
+      return { ok: false, message: "Não foi possível enviar o email de recuperação. Tente novamente em instantes." };
+    }
   }
 
   return { ok: true, message: "Se o email existir, enviaremos as instruções de recuperação." };

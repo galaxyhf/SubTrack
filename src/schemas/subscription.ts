@@ -15,7 +15,6 @@ export const categorySchema = z.object({
   id: z.string().uuid().optional(),
   name: z.string().min(2, "Informe o nome."),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Use uma cor hexadecimal."),
-  icon: z.string().min(2, "Selecione um ícone."),
 });
 
 export const notificationPreferencesSchema = z.object({

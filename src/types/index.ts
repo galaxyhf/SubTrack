@@ -7,7 +7,6 @@ export interface CategorySummary {
   id: string;
   name: string;
   color: string;
-  icon: string;
   total: number;
 }
 

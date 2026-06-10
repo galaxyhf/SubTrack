@@ -10,19 +10,30 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
 import { formatCurrency } from "@/lib/formatters";
-import { demoCategories, demoSubscriptions } from "@/services/mock-data";
+import { calculateCategorySummaries } from "@/services/subscriptions";
+import type { CategorySummary, SubscriptionView } from "@/types";
 
-export const ReportsClient = () => {
-  const [month, setMonth] = useState("06");
-  const [year, setYear] = useState("2026");
+interface ReportsClientProps {
+  categories: CategorySummary[];
+  subscriptions: SubscriptionView[];
+}
+
+export const ReportsClient = ({ categories, subscriptions }: ReportsClientProps) => {
+  const currentDate = new Date();
+  const [month, setMonth] = useState(String(currentDate.getMonth() + 1).padStart(2, "0"));
+  const [year, setYear] = useState(String(currentDate.getFullYear()));
   const [category, setCategory] = useState("all");
   const filtered = useMemo(
-    () => demoSubscriptions.filter((subscription) => (category === "all" ? true : subscription.categoryId === category)),
-    [category],
+    () =>
+      subscriptions
+        .filter((subscription) => subscription.nextPaymentDate.startsWith(`${year}-${month}`))
+        .filter((subscription) => (category === "all" ? true : subscription.categoryId === category)),
+    [category, month, subscriptions, year],
   );
   const total = filtered.reduce((sum, item) => sum + item.price, 0);
   const mostExpensiveSubscription = [...filtered].sort((first, second) => second.price - first.price)[0];
-  const mostExpensiveCategory = [...demoCategories].sort((first, second) => second.total - first.total)[0];
+  const categorySummaries = calculateCategorySummaries(categories, filtered);
+  const mostExpensiveCategory = [...categorySummaries].sort((first, second) => second.total - first.total)[0];
 
   const rows = filtered.map((item) => ({
     Nome: item.name,
@@ -81,7 +92,7 @@ export const ReportsClient = () => {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {["2026", "2025", "2024"].map((item) => (
+            {[String(currentDate.getFullYear()), String(currentDate.getFullYear() - 1), String(currentDate.getFullYear() - 2)].map((item) => (
               <SelectItem key={item} value={item}>
                 {item}
               </SelectItem>
@@ -94,7 +105,7 @@ export const ReportsClient = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas as categorias</SelectItem>
-            {demoCategories.map((item) => (
+            {categories.map((item) => (
               <SelectItem key={item.id} value={item.id}>
                 {item.name}
               </SelectItem>
@@ -133,16 +144,16 @@ export const ReportsClient = () => {
           <CardHeader>
             <CardTitle className="text-sm">Categoria mais cara</CardTitle>
           </CardHeader>
-          <CardContent className="text-2xl font-semibold">{mostExpensiveCategory?.name}</CardContent>
+          <CardContent className="text-2xl font-semibold">{mostExpensiveCategory?.total ? mostExpensiveCategory.name : "-"}</CardContent>
         </Card>
         <Card className="border-border bg-card">
           <CardHeader>
             <CardTitle className="text-sm">Assinatura mais cara</CardTitle>
           </CardHeader>
-          <CardContent className="text-2xl font-semibold">{mostExpensiveSubscription?.name}</CardContent>
+          <CardContent className="text-2xl font-semibold">{mostExpensiveSubscription?.name ?? "-"}</CardContent>
         </Card>
       </div>
-      <DashboardCharts />
+      <DashboardCharts categories={categorySummaries} />
     </div>
   );
 };

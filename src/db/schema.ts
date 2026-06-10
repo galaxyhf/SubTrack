@@ -47,7 +47,6 @@ export const categories = pgTable(
       .references(() => users.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 80 }).notNull(),
     color: varchar("color", { length: 20 }).notNull(),
-    icon: varchar("icon", { length: 80 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => ({

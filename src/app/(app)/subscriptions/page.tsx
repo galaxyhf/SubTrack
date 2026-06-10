@@ -1,17 +1,21 @@
 import { SubscriptionFormDialog } from "@/components/subscriptions/SubscriptionFormDialog";
 import { SubscriptionsTable } from "@/components/subscriptions/SubscriptionsTable";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { demoSubscriptions } from "@/services/mock-data";
+import { requireUser } from "@/lib/auth-utils";
+import { getUserCategories, getUserSubscriptions } from "@/services/subscriptions";
 
-export default function SubscriptionsPage() {
+export default async function SubscriptionsPage() {
+  const user = await requireUser();
+  const [categories, subscriptions] = await Promise.all([getUserCategories(user.id), getUserSubscriptions(user.id)]);
+
   return (
     <>
       <PageHeader
         title="Assinaturas"
         description="Crie, edite, cancele, restaure e filtre todos os gastos recorrentes em uma única tabela."
-        action={<SubscriptionFormDialog />}
+        action={<SubscriptionFormDialog categories={categories} />}
       />
-      <SubscriptionsTable subscriptions={demoSubscriptions} />
+      <SubscriptionsTable categories={categories} subscriptions={subscriptions} />
     </>
   );
 }

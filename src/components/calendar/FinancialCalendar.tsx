@@ -6,23 +6,47 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { demoSubscriptions } from "@/services/mock-data";
 import type { SubscriptionView } from "@/types";
 
+const getStartOfToday = () => {
+  const today = new Date();
+
+  return new Date(today.getFullYear(), today.getMonth(), today.getDate());
+};
+
+const formatDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateKey = (date: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+
+  return new Date(year, month - 1, day);
+};
+
 const getEventColor = (date: string) => {
-  const today = new Date("2026-06-08");
-  const target = new Date(date);
+  const today = getStartOfToday();
+  const target = parseDateKey(date);
   const diff = Math.round((target.getTime() - today.getTime()) / 86_400_000);
+
   if (diff < 0) return "bg-[#EF4444]";
   if (diff <= 7) return "bg-[#F59E0B]";
   return "bg-[#22C55E]";
 };
 
-export const FinancialCalendar = () => {
-  const [date, setDate] = useState<Date | undefined>(new Date("2026-06-08"));
+interface FinancialCalendarProps {
+  subscriptions: SubscriptionView[];
+}
+
+export const FinancialCalendar = ({ subscriptions }: FinancialCalendarProps) => {
+  const [date, setDate] = useState<Date | undefined>(() => getStartOfToday());
   const [selectedEvent, setSelectedEvent] = useState<SubscriptionView | null>(null);
-  const selectedDate = date?.toISOString().slice(0, 10);
-  const events = demoSubscriptions.filter((subscription) => subscription.nextPaymentDate === selectedDate);
+  const selectedDate = date ? formatDateKey(date) : undefined;
+  const events = subscriptions.filter((subscription) => subscription.nextPaymentDate === selectedDate);
 
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">

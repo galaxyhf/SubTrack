@@ -5,11 +5,20 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { calculateDemoMetrics, demoSubscriptions } from "@/services/mock-data";
+import { requireUser } from "@/lib/auth-utils";
+import {
+  calculateCategorySummaries,
+  calculateSubscriptionMetrics,
+  getUserCategories,
+  getUserSubscriptions,
+} from "@/services/subscriptions";
 
-export default function DashboardPage() {
-  const metrics = calculateDemoMetrics();
-  const upcoming = demoSubscriptions
+export default async function DashboardPage() {
+  const user = await requireUser();
+  const [categories, subscriptions] = await Promise.all([getUserCategories(user.id), getUserSubscriptions(user.id)]);
+  const categorySummaries = calculateCategorySummaries(categories, subscriptions);
+  const metrics = calculateSubscriptionMetrics(subscriptions);
+  const upcoming = subscriptions
     .filter((subscription) => subscription.status === "active")
     .sort((first, second) => first.nextPaymentDate.localeCompare(second.nextPaymentDate))
     .slice(0, 5);
@@ -32,12 +41,13 @@ export default function DashboardPage() {
         />
       </div>
       <div className="mt-4 grid gap-4 xl:grid-cols-[1fr_360px]">
-        <DashboardCharts />
+        <DashboardCharts categories={categorySummaries} />
         <Card className="border-border bg-card">
           <CardHeader>
             <CardTitle className="text-base">Próximos vencimentos</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {upcoming.length === 0 ? <p className="text-sm text-muted-foreground">Nenhum vencimento cadastrado.</p> : null}
             {upcoming.map((subscription) => (
               <div key={subscription.id} className="flex items-center justify-between rounded-md border border-border bg-secondary/40 p-3">
                 <div>

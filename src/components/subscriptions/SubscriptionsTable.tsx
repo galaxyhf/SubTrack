@@ -11,16 +11,16 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { billingCycleLabels, formatCurrency, formatDate } from "@/lib/formatters";
-import { demoCategories } from "@/services/mock-data";
-import type { SubscriptionStatus, SubscriptionView } from "@/types";
+import type { CategorySummary, SubscriptionStatus, SubscriptionView } from "@/types";
 
 interface SubscriptionsTableProps {
+  categories: CategorySummary[];
   subscriptions: SubscriptionView[];
 }
 
 type SortKey = "name" | "price" | "nextPaymentDate";
 
-export const SubscriptionsTable = ({ subscriptions }: SubscriptionsTableProps) => {
+export const SubscriptionsTable = ({ categories, subscriptions }: SubscriptionsTableProps) => {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState<SubscriptionStatus | "all">("all");
@@ -64,7 +64,7 @@ export const SubscriptionsTable = ({ subscriptions }: SubscriptionsTableProps) =
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas</SelectItem>
-            {demoCategories.map((item) => (
+            {categories.map((item) => (
               <SelectItem key={item.id} value={item.id}>
                 {item.name}
               </SelectItem>
@@ -130,7 +130,7 @@ export const SubscriptionsTable = ({ subscriptions }: SubscriptionsTableProps) =
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
-                    <SubscriptionFormDialog subscription={subscription} />
+                    <SubscriptionFormDialog categories={categories} subscription={subscription} />
                     <Button
                       variant="outline"
                       size="icon"

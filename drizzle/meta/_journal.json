@@ -8,6 +8,13 @@
       "when": 1780960189030,
       "tag": "0000_loud_wolf_cub",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781054390590,
+      "tag": "0001_charming_weapon_omega",
+      "breakpoints": true
     }
   ]
 }

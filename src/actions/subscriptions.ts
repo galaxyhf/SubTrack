@@ -13,6 +13,12 @@ interface ActionState {
   message: string;
 }
 
+const parseDateInput = (date: string) => {
+  const [year, month, day] = date.split("-").map(Number);
+
+  return new Date(year, month - 1, day, 12);
+};
+
 export const upsertSubscriptionAction = async (input: unknown): Promise<ActionState> => {
   const user = await requireUser();
   const parsed = subscriptionSchema.safeParse(input);
@@ -28,7 +34,7 @@ export const upsertSubscriptionAction = async (input: unknown): Promise<ActionSt
     description: parsed.data.description,
     price: parsed.data.price.toFixed(2),
     billingCycle: parsed.data.billingCycle,
-    nextPaymentDate: new Date(parsed.data.nextPaymentDate),
+    nextPaymentDate: parseDateInput(parsed.data.nextPaymentDate),
     status: parsed.data.status,
     updatedAt: new Date(),
   };
@@ -44,6 +50,9 @@ export const upsertSubscriptionAction = async (input: unknown): Promise<ActionSt
 
   revalidatePath("/subscriptions");
   revalidatePath("/dashboard");
+  revalidatePath("/calendar");
+  revalidatePath("/reports");
+  revalidatePath("/insights");
   return { ok: true, message: "Assinatura salva com sucesso." };
 };
 
@@ -51,6 +60,10 @@ export const deleteSubscriptionAction = async (id: string): Promise<ActionState>
   const user = await requireUser();
   await getDb().delete(subscriptions).where(and(eq(subscriptions.id, id), eq(subscriptions.userId, user.id)));
   revalidatePath("/subscriptions");
+  revalidatePath("/dashboard");
+  revalidatePath("/calendar");
+  revalidatePath("/reports");
+  revalidatePath("/insights");
   return { ok: true, message: "Assinatura excluída." };
 };
 
@@ -61,6 +74,10 @@ export const toggleSubscriptionStatusAction = async (id: string, status: "active
     .set({ status, updatedAt: new Date() })
     .where(and(eq(subscriptions.id, id), eq(subscriptions.userId, user.id)));
   revalidatePath("/subscriptions");
+  revalidatePath("/dashboard");
+  revalidatePath("/calendar");
+  revalidatePath("/reports");
+  revalidatePath("/insights");
   return { ok: true, message: status === "active" ? "Assinatura restaurada." : "Assinatura cancelada." };
 };
 
@@ -75,7 +92,7 @@ export const upsertCategoryAction = async (input: unknown): Promise<ActionState>
   if (parsed.data.id) {
     await getDb()
       .update(categories)
-      .set({ name: parsed.data.name, color: parsed.data.color, icon: parsed.data.icon })
+      .set({ name: parsed.data.name, color: parsed.data.color })
       .where(and(eq(categories.id, parsed.data.id), eq(categories.userId, user.id)));
   } else {
     await getDb().insert(categories).values({ ...parsed.data, userId: user.id });

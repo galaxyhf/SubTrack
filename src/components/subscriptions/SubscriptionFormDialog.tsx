@@ -12,27 +12,37 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { demoCategories } from "@/services/mock-data";
 import { subscriptionSchema, type SubscriptionInput } from "@/schemas/subscription";
-import type { SubscriptionView } from "@/types";
+import type { CategorySummary, SubscriptionView } from "@/types";
 
 interface SubscriptionFormDialogProps {
+  categories: CategorySummary[];
   subscription?: SubscriptionView;
 }
 
-export const SubscriptionFormDialog = ({ subscription }: SubscriptionFormDialogProps) => {
+const getTodayDateInputValue = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+export const SubscriptionFormDialog = ({ categories, subscription }: SubscriptionFormDialogProps) => {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const hasCategories = categories.length > 0;
   const form = useForm<SubscriptionInput>({
     resolver: zodResolver(subscriptionSchema),
     defaultValues: {
       id: subscription?.id,
       name: subscription?.name ?? "",
       description: subscription?.description ?? "",
-      categoryId: subscription?.categoryId ?? demoCategories[0].id,
+      categoryId: subscription?.categoryId ?? categories[0]?.id ?? "",
       price: subscription?.price ?? 0,
       billingCycle: subscription?.billingCycle ?? "monthly",
-      nextPaymentDate: subscription?.nextPaymentDate ?? new Date().toISOString().slice(0, 10),
+      nextPaymentDate: subscription?.nextPaymentDate ?? getTodayDateInputValue(),
       status: subscription?.status ?? "active",
     },
   });
@@ -54,7 +64,7 @@ export const SubscriptionFormDialog = ({ subscription }: SubscriptionFormDialogP
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={subscription ? "outline" : "default"} size={subscription ? "sm" : "default"}>
+        <Button variant={subscription ? "outline" : "default"} size={subscription ? "sm" : "default"} disabled={!hasCategories}>
           {!subscription ? <Plus className="size-4" /> : null}
           {subscription ? "Editar" : "Nova assinatura"}
         </Button>
@@ -79,7 +89,7 @@ export const SubscriptionFormDialog = ({ subscription }: SubscriptionFormDialogP
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {demoCategories.map((category) => (
+                {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     {category.name}
                   </SelectItem>
@@ -128,7 +138,7 @@ export const SubscriptionFormDialog = ({ subscription }: SubscriptionFormDialogP
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending || !hasCategories}>
               {pending ? <Loader2 className="size-4 animate-spin" /> : null}
               Salvar
             </Button>
