@@ -5,11 +5,14 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { users } from "@/db/schema";
 import { loginSchema } from "@/schemas/auth";
+import { getAppUrl } from "@/lib/app-url";
 
 process.env.AUTH_SECRET ??= "subtrack-development-secret-change-me";
+process.env.AUTH_URL = getAppUrl();
 
 export const authConfig = {
   secret: process.env.AUTH_SECRET,
+  trustHost: true,
   pages: {
     signIn: "/login",
   },

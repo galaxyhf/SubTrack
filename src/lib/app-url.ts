@@ -4,21 +4,31 @@ const withHttps = (host: string) => (host.startsWith("http://") || host.startsWi
 
 const normalizeUrl = (url: string) => url.replace(/\/$/, "");
 
+const hasUsableValue = (value: string | undefined): value is string => {
+  if (!value) return false;
+
+  return !["null", "undefined"].includes(value.trim().toLowerCase());
+};
+
 export const getAppUrl = () => {
-  if (process.env.AUTH_URL) {
-    return normalizeUrl(withHttps(process.env.AUTH_URL));
+  const authUrl = process.env.AUTH_URL;
+  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const deploymentUrl = process.env.VERCEL_URL;
+
+  if (hasUsableValue(authUrl)) {
+    return normalizeUrl(withHttps(authUrl));
   }
 
-  if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return normalizeUrl(withHttps(process.env.VERCEL_PROJECT_PRODUCTION_URL));
+  if (process.env.VERCEL_ENV === "production" && hasUsableValue(productionUrl)) {
+    return normalizeUrl(withHttps(productionUrl));
   }
 
-  if (process.env.VERCEL_URL) {
-    return normalizeUrl(withHttps(process.env.VERCEL_URL));
+  if (hasUsableValue(deploymentUrl)) {
+    return normalizeUrl(withHttps(deploymentUrl));
   }
 
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return normalizeUrl(withHttps(process.env.VERCEL_PROJECT_PRODUCTION_URL));
+  if (hasUsableValue(productionUrl)) {
+    return normalizeUrl(withHttps(productionUrl));
   }
 
   return localAppUrl;
